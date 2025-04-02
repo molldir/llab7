@@ -1,19 +1,16 @@
-package com.android.filereadwrite
+package com.example.llab7
 
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Environment
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import java.io.ByteArrayOutputStream
-import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.io.File
 import java.io.IOException
 import java.util.Date
 
@@ -46,11 +43,6 @@ class MainActivity : AppCompatActivity() {
             tvData.text = data
         }
 
-        findViewById<Button>(R.id.btnLogout).setOnClickListener {
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-        }
-
         requestNeededPermission()
     }
 
@@ -58,15 +50,11 @@ class MainActivity : AppCompatActivity() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
             != PackageManager.PERMISSION_GRANTED) {
 
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                Toast.makeText(this, "I need it for File", Toast.LENGTH_SHORT).show()
-            }
-
-            ActivityCompat.requestPermissions(this,
+            ActivityCompat.requestPermissions(
+                this,
                 arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                REQUEST_CODE_WRITE_PERM)
-        } else {
-            Toast.makeText(this, "Already have permission", Toast.LENGTH_SHORT).show()
+                REQUEST_CODE_WRITE_PERM
+            )
         }
     }
 
@@ -81,36 +69,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun writeFile(data: String) {
-        val file = Environment.getExternalStorageDirectory().absolutePath + "/test.txt"
-        Toast.makeText(this, file, Toast.LENGTH_LONG).show()
-        var os: FileOutputStream? = null
+        val file = File(getExternalFilesDir(null), "test.txt")
+        Toast.makeText(this, file.absolutePath, Toast.LENGTH_LONG).show()
         try {
-            os = FileOutputStream(file)
-            os.write(data.toByteArray())
-        } catch (e: Exception) {
+            file.writeText(data)
+            Toast.makeText(this, "Файл успешно записан", Toast.LENGTH_SHORT).show()
+        } catch (e: IOException) {
             e.printStackTrace()
-        } finally {
-            os?.close()
+            Toast.makeText(this, "Ошибка записи файла", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun readFile(): String {
-        val file = Environment.getExternalStorageDirectory().absolutePath + "/test.txt"
-        var result = ""
-        var inputStream: FileInputStream? = null
-        try {
-            inputStream = FileInputStream(file)
-            val bos = ByteArrayOutputStream()
-            var ch: Int
-            while (inputStream.read().also { ch = it } != -1) {
-                bos.write(ch)
-            }
-            result = bos.toString()
-        } catch (e: Exception) {
+        val file = File(getExternalFilesDir(null), "test.txt")
+        return try {
+            file.readText()
+        } catch (e: IOException) {
             e.printStackTrace()
-        } finally {
-            inputStream?.close()
+            "Ошибка чтения файла"
         }
-        return result
     }
 }
